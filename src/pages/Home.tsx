@@ -2,7 +2,7 @@ import { ShieldCheck, Truck, Award } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 
 const Home = () => {
-  const { go, openDetail, products, isLoading } = useAppContext();
+  const { go, openDetail, products, isLoading, loadError } = useAppContext();
 
   // Ambil maksimal 4 produk pertama secara aman untuk beranda (mencegah error undefined)
   const homeProducts = products.slice(0, 4);
@@ -53,6 +53,8 @@ const Home = () => {
       <section className="home-collection">
         {isLoading ? (
           <p style={{ textAlign: "center", width: "100%" }}>Memuat koleksi unggulan...</p>
+        ) : loadError ? (
+          <p className="auth-error" style={{ textAlign: "center", width: "100%" }}>{loadError}</p>
         ) : (
           <div className="home-product-grid">
             {homeProducts.map((product) => (

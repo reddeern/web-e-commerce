@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { rupiah } from "../data/products";
@@ -14,6 +15,18 @@ const Cart = () => {
     totalPrice,
     totalItems,
   } = useAppContext();
+
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleQuantity = async (productId: number, delta: number) => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    const result = await changeQuantity(productId, delta);
+    if (!result.ok) setError(result.message);
+    setBusy(false);
+  };
 
   if (cart.length === 0) {
     return (
@@ -43,11 +56,13 @@ const Cart = () => {
         </label>
       </div>
 
+      {error && <p className="auth-error">{error}</p>}
+
       <div className="cart-list">
         {cart.map((item, index) => {
           const isSelected = selectedCartIds.includes(item.product.id);
           return (
-            <div className={`cart-row ${isSelected ? "selected" : ""}`} key={item.product.id}>
+            <div className={`cart-row ${isSelected ? "selected" : ""}`} key={item.id}>
               <label className="cart-checkbox">
                 <input
                   type="checkbox"
@@ -55,9 +70,9 @@ const Cart = () => {
                   onChange={() => toggleSelectCartItem(item.product.id)}
                 />
               </label>
-              
+
               <span className="cart-number">{index + 1}</span>
-              
+
               <div className="cart-thumb">
                 <img src={item.product.image} alt={item.product.name} />
               </div>
@@ -68,9 +83,9 @@ const Cart = () => {
               </div>
 
               <div className="mini-qty">
-                <button onClick={() => changeQuantity(item.product.id, 1)}><Plus size={12} strokeWidth={3} /></button>
+                <button disabled={busy} onClick={() => handleQuantity(item.product.id, 1)}><Plus size={12} strokeWidth={3} /></button>
                 <b>{item.quantity}</b>
-                <button onClick={() => changeQuantity(item.product.id, -1)}><Minus size={12} strokeWidth={3} /></button>
+                <button disabled={busy} onClick={() => handleQuantity(item.product.id, -1)}><Minus size={12} strokeWidth={3} /></button>
               </div>
 
               <button className="detail-button" onClick={() => openDetail(item.product)}>

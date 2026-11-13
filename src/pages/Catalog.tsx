@@ -2,7 +2,7 @@ import { useAppContext } from "../context/AppContext";
 import { rupiah } from "../data/products";
 
 const Catalog = () => {
-  const { search, openDetail, loggedIn, go, products, isLoading } = useAppContext();
+  const { search, openDetail, loggedIn, go, products, isLoading, loadError, reloadProducts } = useAppContext();
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(search.toLowerCase())
@@ -15,6 +15,18 @@ const Catalog = () => {
       <main className="page catalog-page">
         <h2 className="page-title">Koleksi Topeng</h2>
         <p style={{ textAlign: "center" }}>Memuat katalog produk...</p>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="page catalog-page">
+        <h2 className="page-title">Koleksi Topeng</h2>
+        <p className="auth-error" style={{ textAlign: "center" }}>{loadError}</p>
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <button className="primary-button" onClick={reloadProducts}>Coba Lagi</button>
+        </div>
       </main>
     );
   }
