@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { rupiah } from "../data/products";
 
@@ -48,18 +48,12 @@ const Detail = () => {
 
           <div className="detail-content">
             <h1>{selected.name}</h1>
-            <div className="rating">
-              {[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} fill="currentColor" />)}
-              <span>(4.9 / 45 ulasan)</span>
-            </div>
             <div className="detail-price">{rupiah(selected.price)}</div>
             <p className="detail-summary">{selected.summary}</p>
 
             <div className="detail-spec">
-              <div className="spec-row"><i className="spec-dot" /><span>Kategori</span><b>: {selected.name}</b></div>
+              <div className="spec-row"><i className="spec-dot" /><span>Nama Produk</span><b>: {selected.name}</b></div>
               <div className="spec-row"><i className="spec-dot" /><span>Stok</span><b>: {selected.stock}</b></div>
-              <div className="spec-row"><i className="spec-dot" /><span>Ukuran</span><b>: {selected.size}</b></div>
-              <div className="spec-row"><i className="spec-dot" /><span>Bahan</span><b>: {selected.material}</b></div>
             </div>
 
             <div className="buy-row">

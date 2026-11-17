@@ -2,10 +2,16 @@ import { ShieldCheck, Truck, Award } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 
 const Home = () => {
-  const { go, openDetail, products, isLoading, loadError } = useAppContext();
+  const { go, openDetail, products, isLoading, loadError, search } = useAppContext();
 
-  // Ambil maksimal 4 produk pertama secara aman untuk beranda (mencegah error undefined)
-  const homeProducts = products.slice(0, 4);
+  // Filter produk berdasarkan input search
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Jika sedang mencari (search tidak kosong), tampilkan hasil pencarian.
+  // Jika tidak mencari, tampilkan maksimal 4 produk pertama untuk beranda.
+  const displayProducts = search.trim() !== "" ? filteredProducts : products.slice(0, 4);
 
   return (
     <>
@@ -51,13 +57,19 @@ const Home = () => {
       </section>
 
       <section className="home-collection">
+        <h2 className="page-title" style={{ marginBottom: "20px", fontSize: "22px" }}>
+          {search.trim() !== "" ? `Hasil Pencarian "${search}"` : "Koleksi Unggulan"}
+        </h2>
+
         {isLoading ? (
           <p style={{ textAlign: "center", width: "100%" }}>Memuat koleksi unggulan...</p>
         ) : loadError ? (
           <p className="auth-error" style={{ textAlign: "center", width: "100%" }}>{loadError}</p>
+        ) : displayProducts.length === 0 ? (
+          <p style={{ textAlign: "center", width: "100%", color: "#6f5846" }}>Produk tidak ditemukan.</p>
         ) : (
           <div className="home-product-grid">
-            {homeProducts.map((product) => (
+            {displayProducts.map((product) => (
               <button className="home-product-card" key={product.id} onClick={() => openDetail(product)}>
                 <div className="home-product-image">
                   <img src={product.image} alt={product.name} />

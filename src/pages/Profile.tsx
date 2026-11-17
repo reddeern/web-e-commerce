@@ -11,7 +11,9 @@ const Profile = () => {
         <h2>Profil Saya</h2>
 
         <div className="profile-head">
-          <div className="avatar" />
+          <div className="avatar">
+            {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+          </div>
           <div className="profile-id">
             <b>{user.name}</b>
             <small>{user.email}</small>

@@ -89,7 +89,14 @@ async function fetchAll<T>(path: string, maxPages = 20): Promise<T[]> {
 }
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [page, setPage] = useState<Page>("home");
+  // 1. Inisialisasi halaman berdasarkan URL path saat pertama kali dibuka/di-refresh
+  const getInitialPage = (): Page => {
+    const path = window.location.pathname.replace("/", "").toLowerCase();
+    if (!path || path === "") return "home";
+    return path as Page;
+  };
+
+  const [page, setPage] = useState<Page>(getInitialPage());
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -109,6 +116,43 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const loggedIn = user !== null;
 
+  /* ---------------- Navigasi & URL Sync ---------------- */
+
+  const go = useCallback((next: Page) => {
+    const protectedPages: Page[] = ["keranjang", "checkout", "pesanan", "profil"];
+    if (!loggedIn && protectedPages.includes(next)) {
+      setAuthError("Silakan login untuk mengakses fitur ini.");
+      setPage("login");
+      window.history.pushState({ page: "login" }, "", "/login");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    
+    setPage(next);
+    setAuthError("");
+
+    // Sinkronkan URL browser (misal: "home" jadi "/", selain itu jadi "/nama-halaman")
+    const newPath = next === "home" ? "/" : `/${next}`;
+    window.history.pushState({ page: next }, "", newPath);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [loggedIn]);
+
+  // 2. Menangani tombol Back / Forward di browser
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace("/", "").toLowerCase();
+      if (!path || path === "") {
+        setPage("home");
+      } else {
+        setPage(path as Page);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   /* ---------------- Produk ---------------- */
 
   const loadProducts = useCallback(async () => {
@@ -127,8 +171,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // Ambil data dari API saat aplikasi dibuka; setState terjadi setelah await, bukan sinkron.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadProducts();
   }, [loadProducts]);
 
@@ -195,6 +237,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       clearSession();
       setAuthError("Sesi Anda berakhir. Silakan login kembali.");
       setPage("login");
+      window.history.pushState({ page: "login" }, "", "/login");
     });
     return () => setUnauthorizedHandler(null);
   }, [clearSession]);
@@ -255,8 +298,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       /* token sudah tidak berlaku, tetap lanjut logout lokal */
     }
     clearSession();
-    setPage("home");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    go("home");
   };
 
   const updateProfile = async (input: { nama: string; username: string; email: string }) => {
@@ -269,8 +311,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const addToCart = async (product: Product, amount = 1): Promise<ActionResult> => {
     if (!user) {
       setAuthError("Silakan login untuk menambahkan produk ke keranjang.");
-      setPage("login");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      go("login");
       return { ok: false, message: "", needLogin: true };
     }
     try {
@@ -313,17 +354,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setSelectedCartIds(selectedCartIds.length === cart.length ? [] : cart.map((i) => i.product.id));
   };
 
-  // Hanya barang yang dicentang yang dihitung
   const selectedCartItems = cart.filter((i) => selectedCartIds.includes(i.product.id));
   const totalItems = selectedCartItems.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = selectedCartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
-  /* ---------------- Aksi pesanan ---------------- */
+/* ---------------- Aksi pesanan ---------------- */
 
   const placeOrder = async (shipping: ShippingForm, proof: File | null) => {
     const checkoutItems = selectedCartItems;
 
-    const res = await api<{ data: ApiPesanan }>("/pesanan", {
+    const res = await api<any>("/pesanan", {
       method: "POST",
       body: {
         pesanan_nama_penerima: shipping.name,
@@ -334,16 +374,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
+    // Ambil ID pesanan dengan aman dari berbagai kemungkinan format respons backend
+    const orderId = res?.pesanan_id ?? res?.id ?? res?.data?.pesanan_id ?? res?.data?.id;
+
     // Pesanan sudah dibuat. Kegagalan upload bukti tidak boleh membatalkannya.
     let proofError = "";
-    if (proof) {
+    if (proof && orderId) {
       try {
         const fd = new FormData();
         fd.append("bukti", proof);
-        await api(`/pesanan/${res.data.pesanan_id}/bukti`, { method: "POST", formData: fd });
+        await api(`/pesanan/${orderId}/bukti`, { method: "POST", formData: fd });
       } catch (e) {
         proofError = errorMessage(e);
       }
+    } else if (proof && !orderId) {
+      proofError = "ID pesanan tidak ditemukan.";
     }
 
     // Kosongkan barang yang sudah di-checkout dari keranjang server
@@ -358,32 +403,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const uploadProof = async (orderId: number, file: File) => {
     const fd = new FormData();
     fd.append("bukti", file);
-    const res = await api<{ data: ApiPesanan }>(`/pesanan/${orderId}/bukti`, {
+    const res = await api<any>(`/pesanan/${orderId}/bukti`, {
       method: "POST",
       formData: fd,
     });
-    setOrders((prev) => prev.map((o) => (o.id === orderId ? mapOrder(res.data) : o)));
+    const updatedData = res?.data ?? res;
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? mapOrder(updatedData) : o)));
   };
 
   const cancelOrder = async (orderId: number) => {
     const res = await api<{ data: ApiPesanan }>(`/pesanan/${orderId}/batal`, { method: "POST" });
     setOrders((prev) => prev.map((o) => (o.id === orderId ? mapOrder(res.data) : o)));
-    void loadProducts(); // stok dikembalikan server
-  };
-
-  /* ---------------- Navigasi ---------------- */
-
-  const go = (next: Page) => {
-    const protectedPages: Page[] = ["keranjang", "checkout", "pesanan", "profil"];
-    if (!loggedIn && protectedPages.includes(next)) {
-      setAuthError("Silakan login untuk mengakses fitur ini.");
-      setPage("login");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    setPage(next);
-    setAuthError("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    void loadProducts();
   };
 
   const openDetail = (product: Product) => {
@@ -408,7 +439,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAppContext = () => {
   const context = useContext(AppContext);
   if (!context) throw new Error("useAppContext must be used within an AppProvider");
