@@ -1,4 +1,4 @@
-import type { CartItem, Order, OrderStatus, PaymentStatus, Product, User } from "../types";
+import type { CartItem, Order, OrderStatus, PaymentStatus, Product, User } from "../../types";
 
 /* ---------- Bentuk respons dari Laravel ---------- */
 

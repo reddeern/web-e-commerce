@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Package, RefreshCw, X, MapPin, User, CreditCard } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { rupiah } from "../data/products";
-import { errorMessage } from "../lib/api";
+import { errorMessage } from "../data/lib/api";
 import { type OrderFilter, type OrderStatus, type PaymentStatus, type Order } from "../types";
 
 const statusClass: Record<OrderStatus, string> = {
@@ -59,8 +59,6 @@ const Orders = () => {
     try {
       await uploadProof(orderId, file);
       setMessage("Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.");
-      // Perbarui juga data order yang sedang dibuka di modal jika ada
-      // const updatedOrders = orders.map(o => o.id === orderId ? { ...o, proofUrl: URL.createObjectURL(file) } : o);
       // refresh orders from server
       await refreshOrders();
     } catch (err) {
