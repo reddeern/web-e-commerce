@@ -1,4 +1,4 @@
-const API_URL = (import.meta.env.VITE_API_URL ?? "http://10.10.3.33:8000/api").replace(/\/$/, "");
+const API_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000/api").replace(/\/$/, "");
 const TOKEN_KEY = "tm_token";
 
 export const getToken = (): string | null => {

@@ -60,7 +60,7 @@ const Orders = () => {
       await uploadProof(orderId, file);
       setMessage("Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.");
       // Perbarui juga data order yang sedang dibuka di modal jika ada
-      const updatedOrders = orders.map(o => o.id === orderId ? { ...o, proofUrl: URL.createObjectURL(file) } : o);
+      // const updatedOrders = orders.map(o => o.id === orderId ? { ...o, proofUrl: URL.createObjectURL(file) } : o);
       // refresh orders from server
       await refreshOrders();
     } catch (err) {
