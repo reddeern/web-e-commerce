@@ -54,11 +54,11 @@ const Header = () => {
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari..." />
               <Search size={22} />
             </label>
-          ) : (
+          ) : page !== "profil" ? (
             <button className="tm-icon-button" onClick={() => handleNav("produk")}>
               <Search size={24} />
             </button>
-          )}
+          ) : null}
 
           {!loggedIn && page !== "produk" ? (
             <>

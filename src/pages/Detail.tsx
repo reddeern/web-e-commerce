@@ -1,21 +1,26 @@
-import { useState, useEffect } from "react";
-import { Star, Minus, Plus } from "lucide-react";
+import { useState } from "react";
+import { Minus, Plus } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { rupiah } from "../data/products";
 
 const Detail = () => {
   const { selected, products, addToCart, go } = useAppContext();
-  const [activeImage, setActiveImage] = useState("");
+  const [activeImage, setActiveImage] = useState(selected?.image ?? "");
   const [quantity, setQuantity] = useState(1);
-
-  useEffect(() => {
-    if (selected) {
-      setActiveImage(selected.image);
-      setQuantity(1);
-    }
-  }, [selected]);
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState("");
 
   if (!selected) return <p>Produk tidak ditemukan.</p>;
+
+  const handleAdd = async () => {
+    if (adding) return;
+    setAdding(true);
+    setError("");
+    const result = await addToCart(selected, quantity);
+    setAdding(false);
+    if (result.ok) go("keranjang");
+    else if (!result.needLogin) setError(result.message);
+  };
 
   const gallery = [
     selected.image,
@@ -43,18 +48,12 @@ const Detail = () => {
 
           <div className="detail-content">
             <h1>{selected.name}</h1>
-            <div className="rating">
-              {[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} fill="currentColor" />)}
-              <span>(4.9 / 45 ulasan)</span>
-            </div>
             <div className="detail-price">{rupiah(selected.price)}</div>
             <p className="detail-summary">{selected.summary}</p>
 
             <div className="detail-spec">
-              <div className="spec-row"><i className="spec-dot" /><span>Kategori</span><b>: {selected.name}</b></div>
+              <div className="spec-row"><i className="spec-dot" /><span>Nama Produk</span><b>: {selected.name}</b></div>
               <div className="spec-row"><i className="spec-dot" /><span>Stok</span><b>: {selected.stock}</b></div>
-              <div className="spec-row"><i className="spec-dot" /><span>Ukuran</span><b>: {selected.size}</b></div>
-              <div className="spec-row"><i className="spec-dot" /><span>Bahan</span><b>: {selected.material}</b></div>
             </div>
 
             <div className="buy-row">
@@ -63,16 +62,11 @@ const Detail = () => {
                 <b>{quantity}</b>
                 <button onClick={() => setQuantity(Math.min(selected.stock, quantity + 1))}><Plus size={14} /></button>
               </div>
-              <button
-                className="add-cart"
-                onClick={() => {
-                  addToCart(selected, quantity);
-                  go("keranjang");
-                }}
-              >
-                Tambah ke Keranjang
+              <button className="add-cart" disabled={adding || selected.stock < 1} onClick={handleAdd}>
+                {selected.stock < 1 ? "Stok Habis" : adding ? "Menambahkan..." : "Tambah ke Keranjang"}
               </button>
             </div>
+            {error && <p className="auth-error">{error}</p>}
           </div>
         </div>
 

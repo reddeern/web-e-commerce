@@ -373,12 +373,13 @@ h1, h2, h3 {
 
 .product-image, .home-product-image {
   width: 100%;
-  aspect-ratio: 1.1 / 1;
+  aspect-ratio: 1/1;
   border-radius: 8px;
   background: #f4ebe0;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 .home-product-image { background: #b39479; }
 
@@ -386,7 +387,7 @@ h1, h2, h3 {
   width: 100%;
   height: 100%;
   padding: 8px;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .product-info, .home-product-card span {
@@ -1065,6 +1066,12 @@ h1, h2, h3 {
   min-width: 64px;
   border-radius: 50%;
   background: #e2d0b6;
+  display: flex;             /* Membuat teks berada di tengah */
+  align-items: center;       /* Posisi vertikal tengah */
+  justify-content: center;   /* Posisi horizontal tengah */
+  font-size: 24px;           /* Ukuran huruf inisial */
+  font-weight: 800;          /* Ketebalan huruf */
+  color: var(--brown);
 }
 
 .profile-id {
@@ -1335,4 +1342,94 @@ h1, h2, h3 {
 
   .order-row { grid-template-columns: 1fr auto; }
   .order-thumb, .order-number { display: none; }
+}
+
+/* Modal Overlay & Card */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(43, 24, 16, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  animation: scaleUp 0.2s ease-in-out;
+  text-align: left;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #ece3d7;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.modal-close-button {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.modal-close-button:hover {
+  background: #f0eae1;
+  color: var(--text);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.modal-section-title {
+  font-weight: 700;
+  color: var(--brown);
+  font-size: 14px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }

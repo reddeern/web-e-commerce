@@ -11,8 +11,11 @@ import Auth from "./pages/Auth";
 import "./App.css";
 
 const AppContent = () => {
-  const { page } = useAppContext();
+  const { page, authReady, selected } = useAppContext();
   const isAuthPage = page === "login" || page === "register";
+
+  // Tunggu pemulihan sesi (cek token) agar header tidak berkedip
+  if (!authReady) return <div className="app" />;
 
   return (
     <div className="app">
@@ -20,7 +23,7 @@ const AppContent = () => {
       
       {page === "home" && <Home />}
       {page === "produk" && <Catalog />}
-      {page === "detail" && <Detail />}
+      {page === "detail" && <Detail key={selected?.id} />}
       {page === "keranjang" && <Cart />}
       {page === "checkout" && <Checkout />}
       {page === "pesanan" && <Orders />}
